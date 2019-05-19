@@ -119,9 +119,61 @@ void Dialog::openFolder()
                 Cursor cursor;
                 cursor.image = QImage(reinterpret_cast<uchar*>(imgData.data()), static_cast<int>(imgWidth), static_cast<int>(imgHeight), QImage::Format::Format_ARGB32).copy();
                 cursor.hotSpot = QPoint(static_cast<int>(imgXhot), static_cast<int>(imgYhot));
+                cursor.size = imgSubtype;
 
                 QString key = QStringLiteral("%1").arg(static_cast<int>(subtype), 3, 10, QLatin1Char('0'));
                 cursorFile.cursorMap.insertMulti(key, cursor);
+
+                file.seek(tocPos);
+            }
+            else if (type == 0xfffe0001) {
+                file.seek(position);
+
+                quint32 commHeader;
+                quint32 commType;
+                quint32 commSubtype;
+                quint32 commVersion;
+                quint32 commLength;
+
+                stream  >> commHeader
+                        >> commType
+                        >> commSubtype
+                        >> commVersion
+                        >> commLength;
+
+                if (commHeader != 20 || commType != type || commSubtype != subtype || commVersion != 1) {
+                    continue;
+                }
+
+                QByteArray commData;
+                commData.resize(static_cast<int>(commLength));
+                stream.readRawData(commData.data(), static_cast<int>(commLength));
+
+                switch (subtype) {
+                case 1:
+                    if (!cursorFile.copyright.isEmpty()) {
+                        cursorFile.copyright += QStringLiteral("\n");
+                    }
+                    cursorFile.copyright += QString::fromUtf8(commData);
+                    break;
+
+                case 2:
+                    if (!cursorFile.license.isEmpty()) {
+                        cursorFile.license += QStringLiteral("\n");
+                    }
+                    cursorFile.license += QString::fromUtf8(commData);
+                    break;
+
+                case 3:
+                    if (!cursorFile.other.isEmpty()) {
+                        cursorFile.other += QStringLiteral("\n");
+                    }
+                    cursorFile.other += QString::fromUtf8(commData);
+                    break;
+
+                default:
+                    break;
+                }
 
                 file.seek(tocPos);
             }
@@ -163,9 +215,25 @@ void Dialog::showCursor(const QString &fileName)
     keys.removeDuplicates();
     keys.sort();
 
+    if (!foundCursorFile.copyright.isEmpty()) {
+        msg += QStringLiteral("Copyright: %1<br/>").arg(foundCursorFile.copyright);
+    }
+
+    if (!foundCursorFile.license.isEmpty()) {
+        msg += QStringLiteral("License: %1<br/>").arg(foundCursorFile.license);
+    }
+
+    if (!foundCursorFile.other.isEmpty()) {
+        msg += QStringLiteral("Other: %1<br/>").arg(foundCursorFile.other);
+    }
+
     for (const QString &key: keys) {
         QList<Cursor> cursorList = foundCursorFile.cursorMap.values(key);
         msg += "<p>";
+        Cursor firstCursor = cursorList.first();
+        msg += QStringLiteral("Nominal size: %1. Image size: %2x%3. Hot spot: %4x%5<br/>").arg(QString::number(firstCursor.size),
+                                                                                               QString::number(firstCursor.image.width()), QString::number(firstCursor.image.height()),
+                                                                                               QString::number(firstCursor.hotSpot.x()), QString::number(firstCursor.hotSpot.y()));
         for (const Cursor &cursor: cursorList) {
             QByteArray imgBa;
             QBuffer buffer(&imgBa);

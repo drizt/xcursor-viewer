@@ -30,12 +30,16 @@ namespace Ui { class Dialog; }
 struct Cursor
 {
     QImage image;
+    quint32 size;
     QPoint hotSpot;
 };
 
 struct CursorFile
 {
     QString name;
+    QString license;
+    QString copyright;
+    QString other;
     QMap<QString, Cursor> cursorMap;
 };
 
