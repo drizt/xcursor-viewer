@@ -1,0 +1,47 @@
+\#*\#
+*.tar.gz
+*.tar.bz2
+*.zip
+*.7z
+/win32
+/win64
+/linux
+/linux-qt4
+/linux-qt5
+*~
+/*.patch
+/*.exe
+/build
+/debug
+/release
+/profile
+
+# C++ objects and libs
+
+*.slo
+*.lo
+*.o
+*.a
+*.la
+*.lai
+*.so
+*.dll
+*.dylib
+
+# Qt-es
+
+/.qmake.cache
+/.qmake.stash
+*.pro.user
+*.pro.user.*
+*.moc
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+Makefile*
+*-build-*
+
+# QtCreator
+
+*.autosave
+
