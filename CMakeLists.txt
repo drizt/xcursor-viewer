@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.0)
 
 project(xcursor-viewer CXX)
 
+# Enable C++14
+set(CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 14)
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
