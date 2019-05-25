@@ -25,6 +25,11 @@
 #include <QDir>
 #include <QFile>
 #include <QFileDialog>
+#include <QFileInfo>
+
+#define QS(str) QStringLiteral(str)
+#define QSU(str) QString::fromUtf8(str)
+#define QSL(str) QString::fromLatin1(str)
 
 Dialog::Dialog(QWidget *parent)
     : QDialog(parent)
@@ -32,7 +37,7 @@ Dialog::Dialog(QWidget *parent)
 {
     ui->setupUi(this);
 
-    connect(ui->lwCursors, &QListWidget::currentTextChanged, this, &Dialog::showCursor);
+    connect(ui->twCursors, &QTreeWidget::currentItemChanged, this, &Dialog::showCursor);
     connect(ui->pbOpenFolder, &QPushButton::clicked, this, &Dialog::openFolder);
 }
 
@@ -43,20 +48,26 @@ Dialog::~Dialog()
 
 void Dialog::openFolder()
 {
-    QString dirPath = QFileDialog::getExistingDirectory(this);
+    QString path = QFileDialog::getExistingDirectory(this);
 
-    if (dirPath.isEmpty()) {
+    if (path.isEmpty()) {
         return;
     }
 
-    QDir dir(dirPath);
+    openFolderPath(path);
 
-    QStringList fileList = dir.entryList(QDir::Filter::Files);
+}
 
-    _cursorFileList.clear();
+void Dialog::openFolderPath(const QString &path)
+{
+    QDir dir(path);
 
-    for (const QString &fileName: fileList) {
-        QFile file(dir.absoluteFilePath(fileName));
+    QFileInfoList fileList = dir.entryInfoList(QDir::Filter::Files);
+
+    _cursorFileMap.clear();
+
+    for (const QFileInfo &fileInfo: fileList) {
+        QFile file(fileInfo.absoluteFilePath());
         if (!file.open(QIODevice::OpenModeFlag::ReadOnly)) {
             continue;
         }
@@ -77,7 +88,14 @@ void Dialog::openFolder()
 
         CursorFile cursorFile;
 
-        cursorFile.name = fileName;
+        cursorFile.name = fileInfo.fileName();
+        QFileInfo fi = fileInfo;
+
+        while (fi.isSymLink()) {
+            fi = QFileInfo(fi.symLinkTarget());
+        }
+
+        cursorFile.realName = fi.fileName();
 
         for (quint32 i = 0; i < ntoc; ++i) {
             quint32 type;
@@ -121,7 +139,7 @@ void Dialog::openFolder()
                 cursor.hotSpot = QPoint(static_cast<int>(imgXhot), static_cast<int>(imgYhot));
                 cursor.size = imgSubtype;
 
-                QString key = QStringLiteral("%1").arg(static_cast<int>(subtype), 3, 10, QLatin1Char('0'));
+                QString key = QS("%1").arg(static_cast<int>(subtype), 3, 10, QLatin1Char('0'));
                 cursorFile.cursorMap.insertMulti(key, cursor);
 
                 file.seek(tocPos);
@@ -152,23 +170,23 @@ void Dialog::openFolder()
                 switch (subtype) {
                 case 1:
                     if (!cursorFile.copyright.isEmpty()) {
-                        cursorFile.copyright += QStringLiteral("\n");
+                        cursorFile.copyright += QS("\n");
                     }
-                    cursorFile.copyright += QString::fromUtf8(commData);
+                    cursorFile.copyright += QSU(commData);
                     break;
 
                 case 2:
                     if (!cursorFile.license.isEmpty()) {
-                        cursorFile.license += QStringLiteral("\n");
+                        cursorFile.license += QS("\n");
                     }
-                    cursorFile.license += QString::fromUtf8(commData);
+                    cursorFile.license += QSU(commData);
                     break;
 
                 case 3:
                     if (!cursorFile.other.isEmpty()) {
-                        cursorFile.other += QStringLiteral("\n");
+                        cursorFile.other += QS("\n");
                     }
-                    cursorFile.other += QString::fromUtf8(commData);
+                    cursorFile.other += QSU(commData);
                     break;
 
                 default:
@@ -179,74 +197,104 @@ void Dialog::openFolder()
             }
         }
 
-        _cursorFileList << cursorFile;
+        _cursorFileMap.insert(cursorFile.name, cursorFile);
     }
 
-    ui->lwCursors->clear();
+    ui->twCursors->clear();
 
+    QList<QTreeWidgetItem*> topLevelItems;
     QStringList nameList;
 
-    for (const CursorFile &cursorFile: _cursorFileList) {
-        nameList << cursorFile.name;
-    }
-
-    ui->lwCursors->addItems(nameList);
-}
-
-void Dialog::showCursor(const QString &fileName)
-{
-    CursorFile foundCursorFile;
-
-    for (const CursorFile &cursorFile: _cursorFileList) {
-        if (cursorFile.name == fileName) {
-            foundCursorFile = cursorFile;
-            break;
+    for (const CursorFile &cursorFile: _cursorFileMap) {
+        if (cursorFile.realName == cursorFile.name) {
+            QTreeWidgetItem *item = new QTreeWidgetItem({cursorFile.name});
+            topLevelItems << item;
         }
     }
 
-    if(foundCursorFile.name.isEmpty()) {
+    for (const CursorFile &cursorFile: _cursorFileMap) {
+        if (cursorFile.realName != cursorFile.name) {
+            for (QTreeWidgetItem *topLevel: topLevelItems) {
+                if (topLevel->text(0) == cursorFile.realName) {
+                    QTreeWidgetItem *item = new QTreeWidgetItem(topLevel, {cursorFile.name});
+                    topLevelItems << item;
+                }
+            }
+        }
+    }
+
+    ui->twCursors->addTopLevelItems(topLevelItems);
+
+}
+
+void Dialog::showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous)
+{
+    if (!current) {
         ui->teCursorInfo->clear();
         return;
     }
 
-    QString msg = "<html><body>";
+    CursorFile currentCursorFile = _cursorFileMap.value(current->text(0));
+    CursorFile prevCursorFile = previous ? _cursorFileMap.value(previous->text(0)) : CursorFile();
 
-    QStringList keys = foundCursorFile.cursorMap.keys();
-    keys.removeDuplicates();
-    keys.sort();
-
-    if (!foundCursorFile.copyright.isEmpty()) {
-        msg += QStringLiteral("Copyright: %1<br/>").arg(foundCursorFile.copyright);
+    if(currentCursorFile.name.isEmpty()) {
+        ui->teCursorInfo->clear();
+        return;
     }
 
-    if (!foundCursorFile.license.isEmpty()) {
-        msg += QStringLiteral("License: %1<br/>").arg(foundCursorFile.license);
+    if (prevCursorFile.realName == currentCursorFile.realName) {
+        return;
     }
 
-    if (!foundCursorFile.other.isEmpty()) {
-        msg += QStringLiteral("Other: %1<br/>").arg(foundCursorFile.other);
-    }
+    if (currentCursorFile.cachedCursors.isEmpty()) {
+        currentCursorFile.cachedCursors = "<html><body>";
 
-    for (const QString &key: keys) {
-        QList<Cursor> cursorList = foundCursorFile.cursorMap.values(key);
-        msg += "<p>";
-        Cursor firstCursor = cursorList.first();
-        msg += QStringLiteral("Nominal size: %1. Image size: %2x%3. Hot spot: %4x%5<br/>").arg(QString::number(firstCursor.size),
-                                                                                               QString::number(firstCursor.image.width()), QString::number(firstCursor.image.height()),
-                                                                                               QString::number(firstCursor.hotSpot.x()), QString::number(firstCursor.hotSpot.y()));
-        for (const Cursor &cursor: cursorList) {
-            QByteArray imgBa;
-            QBuffer buffer(&imgBa);
-            cursor.image.save(&buffer, "PNG");
+        QStringList keys = currentCursorFile.cursorMap.keys();
+        keys.removeDuplicates();
+        keys.sort();
 
-            imgBa = imgBa.toBase64();
-
-            msg += "<img src=\"data:image/png;base64, " + QString::fromLatin1(imgBa) + "\"/>";
+        if (!currentCursorFile.copyright.isEmpty()) {
+            currentCursorFile.cachedCursors += QS("Copyright: %1<br/>").arg(currentCursorFile.copyright);
         }
-        msg += "</p>";
+
+        if (!currentCursorFile.license.isEmpty()) {
+            currentCursorFile.cachedCursors += QS("License: %1<br/>").arg(currentCursorFile.license);
+        }
+
+        if (!currentCursorFile.other.isEmpty()) {
+            currentCursorFile.cachedCursors += QS("Other: %1<br/>").arg(currentCursorFile.other);
+        }
+
+        for (const QString &key: keys) {
+            QList<Cursor> cursorList = currentCursorFile.cursorMap.values(key);
+            currentCursorFile.cachedCursors += "<p>";
+            Cursor firstCursor = cursorList.first();
+            currentCursorFile.cachedCursors += QS("Nominal size: %1. Image size: %2x%3. Hot spot: %4x%5<br/>").arg(QString::number(firstCursor.size),
+                                                                                       QString::number(firstCursor.image.width()), QString::number(firstCursor.image.height()),
+                                                                                       QString::number(firstCursor.hotSpot.x()), QString::number(firstCursor.hotSpot.y()));
+            for (const Cursor &cursor: cursorList) {
+                QByteArray imgBa;
+                QBuffer buffer(&imgBa);
+                cursor.image.save(&buffer, "PNG");
+
+                imgBa = imgBa.toBase64();
+
+                currentCursorFile.cachedCursors += "<img src=\"data:image/png;base64, " + QSL(imgBa) + "\"/>";
+            }
+            currentCursorFile.cachedCursors += "</p>";
+        }
+
+        currentCursorFile.cachedCursors += "</body></html>";
+
+        QMutableMapIterator<QString, CursorFile> it = _cursorFileMap;
+        QString realName = currentCursorFile.realName.isEmpty() ? currentCursorFile.name : currentCursorFile.realName;
+        while (it.hasNext()) {
+            CursorFile &cursorFile = it.next().value();
+            if (cursorFile.realName == currentCursorFile.realName) {
+                cursorFile.cachedCursors = currentCursorFile.cachedCursors;
+            }
+        }
     }
 
-    msg += "</body></html>";
-
-    ui->teCursorInfo->setHtml(msg);
+    ui->teCursorInfo->setHtml(currentCursorFile.cachedCursors);
 }

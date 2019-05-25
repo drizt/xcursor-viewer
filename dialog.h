@@ -24,6 +24,7 @@
 #include <QList>
 #include <QMap>
 #include <QString>
+#include <QTreeWidgetItem>
 
 namespace Ui { class Dialog; }
 
@@ -37,10 +38,12 @@ struct Cursor
 struct CursorFile
 {
     QString name;
+    QString realName;
     QString license;
     QString copyright;
     QString other;
     QMap<QString, Cursor> cursorMap;
+    QString cachedCursors;
 };
 
 class Dialog : public QDialog
@@ -52,10 +55,11 @@ public:
     ~Dialog();
 
     void openFolder();
-    void showCursor(const QString &fileName);
+    void openFolderPath(const QString &path);
+    void showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
 private:
     Ui::Dialog *ui;
-    QList<CursorFile> _cursorFileList;
+    QMap<QString, CursorFile> _cursorFileMap;
 };
 

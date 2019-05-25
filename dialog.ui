@@ -63,7 +63,16 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="QListWidget" name="lwCursors"/>
+     <widget class="QTreeWidget" name="twCursors">
+      <attribute name="headerVisible">
+       <bool>false</bool>
+      </attribute>
+      <column>
+       <property name="text">
+        <string notr="true">1</string>
+       </property>
+      </column>
+     </widget>
      <widget class="QTextEdit" name="teCursorInfo">
       <property name="readOnly">
        <bool>true</bool>
