@@ -21,3 +21,5 @@ set(FORMS dialog.ui)
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${FORMS})
 target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Widgets)
+
+install(TARGETS ${PROJECT_NAME} ${CMAKE_INSTALL_BINDIR})
