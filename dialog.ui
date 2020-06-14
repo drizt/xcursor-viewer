@@ -32,7 +32,7 @@
       <item>
        <widget class="QPushButton" name="pbOpenFolder">
         <property name="text">
-         <string>Open folder</string>
+         <string>&amp;Open folder</string>
         </property>
        </widget>
       </item>
