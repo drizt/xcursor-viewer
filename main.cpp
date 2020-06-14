@@ -19,12 +19,18 @@
 #include "dialog.h"
 
 #include <QApplication>
+#include <QCommandLineParser>
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+    QCommandLineParser parser;
+    parser.addHelpOption();
+    parser.addPositionalArgument("path", "Path to cursor file or to directory with cursors", "[path]");
+    parser.process(app);
+    const auto args=parser.positionalArguments();
 
-    Dialog dlg;
+    Dialog dlg(args.isEmpty() ? QString{} : args.front());
     dlg.show();
     app.exec();
 
