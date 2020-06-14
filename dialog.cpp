@@ -26,6 +26,7 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QShortcut>
 
 #define QS(str) QStringLiteral(str)
 #define QSU(str) QString::fromUtf8(str)
@@ -39,6 +40,8 @@ Dialog::Dialog(const QString& path, QWidget *parent)
 
     connect(ui->twCursors, &QTreeWidget::currentItemChanged, this, &Dialog::showCursor);
     connect(ui->pbOpenFolder, &QPushButton::clicked, this, &Dialog::openFolder);
+    connect(new QShortcut(QKeySequence("Ctrl+O"), ui->pbOpenFolder), &QShortcut::activated,
+            ui->pbOpenFolder, &QPushButton::click);
 
     if (!path.isEmpty()) {
         openFolderPath(path);
