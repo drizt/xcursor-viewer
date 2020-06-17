@@ -51,11 +51,11 @@ class Dialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit Dialog(QWidget *parent = nullptr);
+    explicit Dialog(const QString& path, QWidget *parent = nullptr);
     ~Dialog();
 
     void openFolder();
-    void openFolderPath(const QString &path);
+    void openFolderPath(QString path);
     void showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
 private:

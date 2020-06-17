@@ -26,12 +26,13 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QShortcut>
 
 #define QS(str) QStringLiteral(str)
 #define QSU(str) QString::fromUtf8(str)
 #define QSL(str) QString::fromLatin1(str)
 
-Dialog::Dialog(QWidget *parent)
+Dialog::Dialog(const QString& path, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::Dialog)
 {
@@ -39,6 +40,12 @@ Dialog::Dialog(QWidget *parent)
 
     connect(ui->twCursors, &QTreeWidget::currentItemChanged, this, &Dialog::showCursor);
     connect(ui->pbOpenFolder, &QPushButton::clicked, this, &Dialog::openFolder);
+    connect(new QShortcut(QKeySequence("Ctrl+O"), ui->pbOpenFolder), &QShortcut::activated,
+            ui->pbOpenFolder, &QPushButton::click);
+
+    if (!path.isEmpty()) {
+        openFolderPath(path);
+    }
 }
 
 Dialog::~Dialog()
@@ -58,8 +65,15 @@ void Dialog::openFolder()
 
 }
 
-void Dialog::openFolderPath(const QString &path)
+void Dialog::openFolderPath(QString path)
 {
+    const QFileInfo pathInfo(path);
+    QString fileToSelect;
+    if (!pathInfo.isDir()) {
+        path = pathInfo.absoluteDir().absolutePath();
+        fileToSelect = pathInfo.fileName();
+    }
+
     QDir dir(path);
 
     QFileInfoList fileList = dir.entryInfoList(QDir::Filter::Files);
@@ -203,12 +217,16 @@ void Dialog::openFolderPath(const QString &path)
     ui->twCursors->clear();
 
     QList<QTreeWidgetItem*> topLevelItems;
+    QTreeWidgetItem *itemToSelect = nullptr;
     QStringList nameList;
 
     for (const CursorFile &cursorFile: _cursorFileMap) {
         if (cursorFile.realName == cursorFile.name) {
             QTreeWidgetItem *item = new QTreeWidgetItem({cursorFile.name});
             topLevelItems << item;
+            if (cursorFile.name == fileToSelect && !itemToSelect) {
+                itemToSelect = item;
+            }
         }
     }
 
@@ -218,6 +236,9 @@ void Dialog::openFolderPath(const QString &path)
                 if (topLevel->text(0) == cursorFile.realName) {
                     QTreeWidgetItem *item = new QTreeWidgetItem(topLevel, {cursorFile.name});
                     topLevelItems << item;
+                    if (cursorFile.name == fileToSelect && !itemToSelect) {
+                        itemToSelect = item;
+                    }
                 }
             }
         }
@@ -225,6 +246,9 @@ void Dialog::openFolderPath(const QString &path)
 
     ui->twCursors->addTopLevelItems(topLevelItems);
 
+    if (itemToSelect) {
+        ui->twCursors->setCurrentItem(itemToSelect);
+    }
 }
 
 void Dialog::showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous)
