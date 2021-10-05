@@ -154,7 +154,8 @@ void Dialog::openFolderPath(QString path)
                 cursor.size = imgSubtype;
 
                 QString key = QS("%1").arg(static_cast<int>(subtype), 3, 10, QLatin1Char('0'));
-                cursorFile.cursorMap.insertMulti(key, cursor);
+                cursorFile.cursorMap.insert(key, cursor);
+                
 
                 file.seek(tocPos);
             }
