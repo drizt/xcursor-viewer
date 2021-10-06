@@ -22,7 +22,7 @@
 
 #include <QImage>
 #include <QList>
-#include <QMap>
+#include <QMultiMap>
 #include <QString>
 #include <QTreeWidgetItem>
 
@@ -42,7 +42,7 @@ struct CursorFile
     QString license;
     QString copyright;
     QString other;
-    QMap<QString, Cursor> cursorMap;
+    QMultiMap<QString, Cursor> cursorMap;
     QString cachedCursors;
 };
 
