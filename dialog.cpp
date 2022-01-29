@@ -138,8 +138,8 @@ void Dialog::openFolderPath(QString path)
                         >> imgVersion
                         >> imgWidth
                         >> imgHeight
-                        >> imgYhot
                         >> imgXhot
+                        >> imgYhot
                         >> imgDelay;
 
                 if (imgHeader != 36 || imgType != type || imgSubtype != subtype || imgVersion != 1) {
