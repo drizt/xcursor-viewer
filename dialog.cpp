@@ -27,6 +27,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QShortcut>
+#include <QMessageBox>
 
 #define QS(str) QStringLiteral(str)
 #define QSU(str) QString::fromUtf8(str)
@@ -42,6 +43,8 @@ Dialog::Dialog(const QString& path, QWidget *parent)
     connect(ui->pbOpenFolder, &QPushButton::clicked, this, &Dialog::openFolder);
     connect(new QShortcut(QKeySequence("Ctrl+O"), ui->pbOpenFolder), &QShortcut::activated,
             ui->pbOpenFolder, &QPushButton::click);
+    connect(new QShortcut(QKeySequence("Ctrl+E"), ui->pbExport), &QShortcut::activated,
+            ui->pbExport, &QPushButton::click);
 
     if (!path.isEmpty()) {
         openFolderPath(path);
@@ -250,6 +253,8 @@ void Dialog::openFolderPath(QString path)
     if (itemToSelect) {
         ui->twCursors->setCurrentItem(itemToSelect);
     }
+
+    ui->pbExport->setEnabled(!_cursorFileMap.isEmpty());
 }
 
 void Dialog::showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous)
@@ -322,4 +327,18 @@ void Dialog::showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous)
     }
 
     ui->teCursorInfo->setHtml(currentCursorFile.cachedCursors);
+}
+
+void Dialog::on_pbExport_clicked() {
+    QString path = QFileDialog::getExistingDirectory(this);
+    for (const CursorFile &cursorFile: _cursorFileMap) {
+        for (const Cursor &cursor: cursorFile.cursorMap) {
+            QString fpath = QS("%1/%2_%3_%4.png").arg(path, cursorFile.name, QString::number(cursor.hotSpot.x()), QString::number(cursor.hotSpot.y()));
+            if(!cursor.image.save(fpath)) {
+                QMessageBox::critical(this, tr("Export Failed"), tr("Could not save file: <pre>%1</pre>").arg(fpath));
+                return;
+            }
+        }
+    }
+    QMessageBox::information(this, tr("Export Completed"), tr("The cursors have been exported successfully!"));
 }
