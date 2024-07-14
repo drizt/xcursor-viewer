@@ -11,14 +11,14 @@ set(CMAKE_AUTOUIC ON)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-find_package(Qt5 5.2 REQUIRED Core Gui Widgets)
+find_package(Qt5 5.2 REQUIRED Core Gui Widgets Svg)
 
 set(SOURCES main.cpp dialog.cpp)
 set(HEADERS dialog.h)
 set(FORMS dialog.ui)
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${FORMS})
-target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Widgets)
+target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Svg)
 
 install(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION bin

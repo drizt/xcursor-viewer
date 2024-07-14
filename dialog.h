@@ -25,14 +25,25 @@
 #include <QMultiMap>
 #include <QString>
 #include <QTreeWidgetItem>
+#include <QSlider>
 
-namespace Ui { class Dialog; }
+namespace Ui
+{
+    class Dialog;
+}
+
+enum class CursorType
+{
+    Svg,
+    Pixmap
+};
 
 struct Cursor
 {
     QImage image;
     quint32 size;
-    QPoint hotSpot;
+    QPointF hotSpot;
+    CursorType type;
 };
 
 struct CursorFile
@@ -51,12 +62,14 @@ class Dialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit Dialog(const QString& path, QWidget *parent = nullptr);
+    explicit Dialog(const QString &path, QWidget *parent = nullptr);
     ~Dialog();
 
     void openFolder();
     void openFolderPath(QString path);
     void showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous);
+    void setSvgSize(qint32 size);
+    void reloadCursor();
 
 private slots:
     void on_pbExport_clicked();
@@ -64,5 +77,9 @@ private slots:
 private:
     Ui::Dialog *ui;
     QMap<QString, CursorFile> _cursorFileMap;
-};
+    QString currentPath;
 
+    qint32 svgSize = 256;
+    QTreeWidgetItem *current;
+    QTreeWidgetItem *previous;
+};

@@ -90,6 +90,16 @@
      </widget>
     </widget>
    </item>
+   <item>
+     <widget class="QSlider" name="svgSlider">
+      <property name="tickInterval">
+       <number>8</number>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
   </layout>
  </widget>
  <resources/>
