@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: 2019, 2026 Ivan Romanov <drizt72@zoho.eu>
+SPDX-FileContributor: 2020 Ruslan Kabatsayev <b7.10110111@gmail.com>
+SPDX-FileContributor: 2023 Tasos Sahanidis <tasos@tasossah.com>
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
 <ui version="4.0">
  <class>Dialog</class>
  <widget class="QDialog" name="Dialog">

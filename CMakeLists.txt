@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2019, 2026 Ivan Romanov <drizt72@zoho.eu>
+# SPDX-FileContributor: 2020 Ruslan Kabatsayev <b7.10110111@gmail.com>
+# SPDX-FileContributor: 2025 rewine <luhongxu@deepin.org>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 cmake_minimum_required(VERSION 3.10)
 
 project(xcursor-viewer CXX)
