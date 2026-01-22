@@ -45,7 +45,9 @@ Dialog::~Dialog()
 
 void Dialog::openFolder()
 {
-    QString path = QFileDialog::getExistingDirectory(this);
+    QString defaultDir = "/usr/share/icons";
+
+    QString path = QFileDialog::getExistingDirectory(this, "", defaultDir);
 
     if (path.isEmpty()) {
         return;
