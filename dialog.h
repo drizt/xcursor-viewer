@@ -26,17 +26,18 @@
 #include <QString>
 #include <QTreeWidgetItem>
 
-namespace Ui { class Dialog; }
-
-struct Cursor
+namespace Ui
 {
+class Dialog;
+}
+
+struct Cursor {
     QImage image;
     quint32 size;
     QPoint hotSpot;
 };
 
-struct CursorFile
-{
+struct CursorFile {
     QString name;
     QString realName;
     QString license;
@@ -51,7 +52,7 @@ class Dialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit Dialog(const QString& path, QWidget *parent = nullptr);
+    explicit Dialog(const QString &path, QWidget *parent = nullptr);
     ~Dialog();
 
     void openFolder();
@@ -65,4 +66,3 @@ private:
     Ui::Dialog *ui;
     QMap<QString, CursorFile> _cursorFileMap;
 };
-

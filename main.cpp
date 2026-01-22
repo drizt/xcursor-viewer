@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     parser.addHelpOption();
     parser.addPositionalArgument("path", "Path to cursor file or to directory with cursors", "[path]");
     parser.process(app);
-    const auto args=parser.positionalArguments();
+    const auto args = parser.positionalArguments();
 
     Dialog dlg(args.isEmpty() ? QString{} : args.front());
     dlg.show();

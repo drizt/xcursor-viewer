@@ -26,14 +26,14 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
-#include <QShortcut>
 #include <QMessageBox>
+#include <QShortcut>
 
 #define QS(str) QStringLiteral(str)
 #define QSU(str) QString::fromUtf8(str)
 #define QSL(str) QString::fromLatin1(str)
 
-Dialog::Dialog(const QString& path, QWidget *parent)
+Dialog::Dialog(const QString &path, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::Dialog)
 {
@@ -41,10 +41,8 @@ Dialog::Dialog(const QString& path, QWidget *parent)
 
     connect(ui->twCursors, &QTreeWidget::currentItemChanged, this, &Dialog::showCursor);
     connect(ui->pbOpenFolder, &QPushButton::clicked, this, &Dialog::openFolder);
-    connect(new QShortcut(QKeySequence("Ctrl+O"), ui->pbOpenFolder), &QShortcut::activated,
-            ui->pbOpenFolder, &QPushButton::click);
-    connect(new QShortcut(QKeySequence("Ctrl+E"), ui->pbExport), &QShortcut::activated,
-            ui->pbExport, &QPushButton::click);
+    connect(new QShortcut(QKeySequence("Ctrl+O"), ui->pbOpenFolder), &QShortcut::activated, ui->pbOpenFolder, &QPushButton::click);
+    connect(new QShortcut(QKeySequence("Ctrl+E"), ui->pbExport), &QShortcut::activated, ui->pbExport, &QPushButton::click);
 
     if (!path.isEmpty()) {
         openFolderPath(path);
@@ -65,7 +63,6 @@ void Dialog::openFolder()
     }
 
     openFolderPath(path);
-
 }
 
 void Dialog::openFolderPath(QString path)
@@ -83,7 +80,7 @@ void Dialog::openFolderPath(QString path)
 
     _cursorFileMap.clear();
 
-    for (const QFileInfo &fileInfo: fileList) {
+    for (const QFileInfo &fileInfo : fileList) {
         QFile file(fileInfo.absoluteFilePath());
         if (!file.open(QIODevice::OpenModeFlag::ReadOnly)) {
             continue;
@@ -135,15 +132,7 @@ void Dialog::openFolderPath(QString path)
                 quint32 imgXhot;
                 quint32 imgDelay;
 
-                stream  >> imgHeader
-                        >> imgType
-                        >> imgSubtype
-                        >> imgVersion
-                        >> imgWidth
-                        >> imgHeight
-                        >> imgXhot
-                        >> imgYhot
-                        >> imgDelay;
+                stream >> imgHeader >> imgType >> imgSubtype >> imgVersion >> imgWidth >> imgHeight >> imgXhot >> imgYhot >> imgDelay;
 
                 if (imgHeader != 36 || imgType != type || imgSubtype != subtype || imgVersion != 1) {
                     continue;
@@ -152,17 +141,17 @@ void Dialog::openFolderPath(QString path)
                 QByteArray imgData = file.read((imgWidth * imgHeight) * 4);
 
                 Cursor cursor;
-                cursor.image = QImage(reinterpret_cast<uchar*>(imgData.data()), static_cast<int>(imgWidth), static_cast<int>(imgHeight), QImage::Format::Format_ARGB32).copy();
+                cursor.image =
+                    QImage(reinterpret_cast<uchar *>(imgData.data()), static_cast<int>(imgWidth), static_cast<int>(imgHeight), QImage::Format::Format_ARGB32)
+                        .copy();
                 cursor.hotSpot = QPoint(static_cast<int>(imgXhot), static_cast<int>(imgYhot));
                 cursor.size = imgSubtype;
 
                 QString key = QS("%1").arg(static_cast<int>(subtype), 3, 10, QLatin1Char('0'));
                 cursorFile.cursorMap.insert(key, cursor);
-                
 
                 file.seek(tocPos);
-            }
-            else if (type == 0xfffe0001) {
+            } else if (type == 0xfffe0001) {
                 file.seek(position);
 
                 quint32 commHeader;
@@ -171,11 +160,7 @@ void Dialog::openFolderPath(QString path)
                 quint32 commVersion;
                 quint32 commLength;
 
-                stream  >> commHeader
-                        >> commType
-                        >> commSubtype
-                        >> commVersion
-                        >> commLength;
+                stream >> commHeader >> commType >> commSubtype >> commVersion >> commLength;
 
                 if (commHeader != 20 || commType != type || commSubtype != subtype || commVersion != 1) {
                     continue;
@@ -220,11 +205,11 @@ void Dialog::openFolderPath(QString path)
 
     ui->twCursors->clear();
 
-    QList<QTreeWidgetItem*> topLevelItems;
+    QList<QTreeWidgetItem *> topLevelItems;
     QTreeWidgetItem *itemToSelect = nullptr;
     QStringList nameList;
 
-    for (const CursorFile &cursorFile: _cursorFileMap) {
+    for (const CursorFile &cursorFile : _cursorFileMap) {
         if (cursorFile.realName == cursorFile.name) {
             QTreeWidgetItem *item = new QTreeWidgetItem({cursorFile.name});
             topLevelItems << item;
@@ -234,9 +219,9 @@ void Dialog::openFolderPath(QString path)
         }
     }
 
-    for (const CursorFile &cursorFile: _cursorFileMap) {
+    for (const CursorFile &cursorFile : _cursorFileMap) {
         if (cursorFile.realName != cursorFile.name) {
-            for (QTreeWidgetItem *topLevel: topLevelItems) {
+            for (QTreeWidgetItem *topLevel : topLevelItems) {
                 if (topLevel->text(0) == cursorFile.realName) {
                     QTreeWidgetItem *item = new QTreeWidgetItem(topLevel, {cursorFile.name});
                     topLevelItems << item;
@@ -267,7 +252,7 @@ void Dialog::showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous)
     CursorFile currentCursorFile = _cursorFileMap.value(current->text(0));
     CursorFile prevCursorFile = previous ? _cursorFileMap.value(previous->text(0)) : CursorFile();
 
-    if(currentCursorFile.name.isEmpty()) {
+    if (currentCursorFile.name.isEmpty()) {
         ui->teCursorInfo->clear();
         return;
     }
@@ -295,14 +280,17 @@ void Dialog::showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous)
             currentCursorFile.cachedCursors += QS("Other: %1<br/>").arg(currentCursorFile.other);
         }
 
-        for (const QString &key: keys) {
+        for (const QString &key : keys) {
             QList<Cursor> cursorList = currentCursorFile.cursorMap.values(key);
             currentCursorFile.cachedCursors += "<p>";
             Cursor firstCursor = cursorList.first();
-            currentCursorFile.cachedCursors += QS("Nominal size: %1. Image size: %2x%3. Hot spot: %4x%5<br/>").arg(QString::number(firstCursor.size),
-                                                                                       QString::number(firstCursor.image.width()), QString::number(firstCursor.image.height()),
-                                                                                       QString::number(firstCursor.hotSpot.x()), QString::number(firstCursor.hotSpot.y()));
-            for (const Cursor &cursor: cursorList) {
+            currentCursorFile.cachedCursors += QS("Nominal size: %1. Image size: %2x%3. Hot spot: %4x%5<br/>")
+                                                   .arg(QString::number(firstCursor.size),
+                                                        QString::number(firstCursor.image.width()),
+                                                        QString::number(firstCursor.image.height()),
+                                                        QString::number(firstCursor.hotSpot.x()),
+                                                        QString::number(firstCursor.hotSpot.y()));
+            for (const Cursor &cursor : cursorList) {
                 QByteArray imgBa;
                 QBuffer buffer(&imgBa);
                 cursor.image.save(&buffer, "PNG");
@@ -329,12 +317,13 @@ void Dialog::showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous)
     ui->teCursorInfo->setHtml(currentCursorFile.cachedCursors);
 }
 
-void Dialog::on_pbExport_clicked() {
+void Dialog::on_pbExport_clicked()
+{
     QString path = QFileDialog::getExistingDirectory(this);
-    for (const CursorFile &cursorFile: _cursorFileMap) {
-        for (const Cursor &cursor: cursorFile.cursorMap) {
+    for (const CursorFile &cursorFile : _cursorFileMap) {
+        for (const Cursor &cursor : cursorFile.cursorMap) {
             QString fpath = QS("%1/%2_%3_%4.png").arg(path, cursorFile.name, QString::number(cursor.hotSpot.x()), QString::number(cursor.hotSpot.y()));
-            if(!cursor.image.save(fpath)) {
+            if (!cursor.image.save(fpath)) {
                 QMessageBox::critical(this, tr("Export Failed"), tr("Could not save file: <pre>%1</pre>").arg(fpath));
                 return;
             }
