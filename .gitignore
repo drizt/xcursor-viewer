@@ -45,3 +45,6 @@ Makefile*
 
 *.autosave
 
+# CMake
+
+/CMakeLists.txt.user
