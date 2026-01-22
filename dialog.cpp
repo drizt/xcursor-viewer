@@ -21,6 +21,19 @@
 #define QS(str) QStringLiteral(str)
 #define QSU(str) QString::fromUtf8(str)
 #define QSL(str) QString::fromLatin1(str)
+#define QSN(str) QString::number(str)
+
+static bool createPathIfNeed(const QString &path)
+{
+    bool res = true;
+
+    QDir dir(path);
+    if (!dir.exists()) {
+        res = dir.mkpath(".");
+    }
+
+    return res;
+}
 
 Dialog::Dialog(const QString &path, QWidget *parent)
     : QDialog(parent)
@@ -312,11 +325,32 @@ void Dialog::on_pbExport_clicked()
 {
     QString path = QFileDialog::getExistingDirectory(this);
     for (const CursorFile &cursorFile : _cursorFileMap) {
-        for (const Cursor &cursor : cursorFile.cursorMap) {
-            QString fpath = QS("%1/%2_%3_%4.png").arg(path, cursorFile.name, QString::number(cursor.hotSpot.x()), QString::number(cursor.hotSpot.y()));
-            if (!cursor.image.save(fpath)) {
-                QMessageBox::critical(this, tr("Export Failed"), tr("Could not save file: <pre>%1</pre>").arg(fpath));
-                return;
+        for (const QString &key : cursorFile.cursorMap.keys()) {
+            QList<Cursor> cursors = cursorFile.cursorMap.values(key);
+
+            int digits = QSN(cursors.length() - 1).length();
+
+            for (int i = 0; i < cursors.length(); i++) {
+                Cursor cursor = cursors[i];
+
+                QString dirPath;
+                QString fileName;
+                if (cursors.length() > 1) {
+                    dirPath = QS("%1/%2/%3").arg(path, QSN(cursor.size), cursorFile.name);
+                    fileName = QString("%1").arg(i, digits, 10, QChar('0')) + ".png";
+
+                } else {
+                    dirPath = QS("%1/%2").arg(path, QSN(cursor.size));
+                    fileName = cursorFile.name + ".png";
+                }
+
+                createPathIfNeed(dirPath);
+
+                QString fpath = dirPath + "/" + fileName;
+                if (!cursor.image.save(fpath)) {
+                    QMessageBox::critical(this, tr("Export Failed"), tr("Could not save file: <pre>%1</pre>").arg(fpath));
+                    return;
+                }
             }
         }
     }
