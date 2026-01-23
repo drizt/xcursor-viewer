@@ -80,7 +80,7 @@ void Dialog::openFolderPath(QString path)
 
     QDir dir(path);
 
-    QFileInfoList fileList = dir.entryInfoList(QDir::Filter::Files);
+    const QFileInfoList fileList = dir.entryInfoList(QDir::Filter::Files);
 
     _cursorFileMap.clear();
 
@@ -213,7 +213,7 @@ void Dialog::openFolderPath(QString path)
     QTreeWidgetItem *itemToSelect = nullptr;
     QStringList nameList;
 
-    for (const CursorFile &cursorFile : _cursorFileMap) {
+    for (const CursorFile &cursorFile : qAsConst(_cursorFileMap)) {
         if (cursorFile.realName == cursorFile.name) {
             QTreeWidgetItem *item = new QTreeWidgetItem({cursorFile.name});
             topLevelItems << item;
@@ -223,9 +223,9 @@ void Dialog::openFolderPath(QString path)
         }
     }
 
-    for (const CursorFile &cursorFile : _cursorFileMap) {
+    for (const CursorFile &cursorFile : qAsConst(_cursorFileMap)) {
         if (cursorFile.realName != cursorFile.name) {
-            for (QTreeWidgetItem *topLevel : topLevelItems) {
+            for (QTreeWidgetItem *topLevel : qAsConst(topLevelItems)) {
                 if (topLevel->text(0) == cursorFile.realName) {
                     QTreeWidgetItem *item = new QTreeWidgetItem(topLevel, {cursorFile.name});
                     topLevelItems << item;
@@ -284,8 +284,8 @@ void Dialog::showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous)
             currentCursorFile.cachedCursors += QS("Other: %1<br/>").arg(currentCursorFile.other);
         }
 
-        for (const QString &key : keys) {
-            QList<Cursor> cursorList = currentCursorFile.cursorMap.values(key);
+        for (const QString &key : qAsConst(keys)) {
+            const QList<Cursor> cursorList = currentCursorFile.cursorMap.values(key);
             currentCursorFile.cachedCursors += "<p>";
             Cursor firstCursor = cursorList.first();
             currentCursorFile.cachedCursors += QS("Nominal size: %1. Image size: %2x%3. Hot spot: %4x%5<br/>")
@@ -324,7 +324,7 @@ void Dialog::showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous)
 void Dialog::on_pbExport_clicked()
 {
     QString path = QFileDialog::getExistingDirectory(this);
-    for (const CursorFile &cursorFile : _cursorFileMap) {
+    for (const CursorFile &cursorFile : qAsConst(_cursorFileMap)) {
         for (const QString &key : cursorFile.cursorMap.keys()) {
             QList<Cursor> cursors = cursorFile.cursorMap.values(key);
 
