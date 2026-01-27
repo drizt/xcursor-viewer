@@ -47,8 +47,8 @@ public:
     void openFolderPath(QString path);
     void showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
-private slots:
-    void on_pbExport_clicked();
+private:
+    void exportCursors();
 
 private:
     Ui::Dialog *ui;

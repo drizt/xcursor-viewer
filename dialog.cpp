@@ -309,7 +309,6 @@ void Dialog::showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous)
         currentCursorFile.cachedCursors += "</body></html>";
 
         QMutableMapIterator<QString, CursorFile> it = _cursorFileMap;
-        QString realName = currentCursorFile.realName.isEmpty() ? currentCursorFile.name : currentCursorFile.realName;
         while (it.hasNext()) {
             CursorFile &cursorFile = it.next().value();
             if (cursorFile.realName == currentCursorFile.realName) {
@@ -321,11 +320,12 @@ void Dialog::showCursor(QTreeWidgetItem *current, QTreeWidgetItem *previous)
     ui->teCursorInfo->setHtml(currentCursorFile.cachedCursors);
 }
 
-void Dialog::on_pbExport_clicked()
+void Dialog::exportCursors()
 {
     QString path = QFileDialog::getExistingDirectory(this);
     for (const CursorFile &cursorFile : qAsConst(_cursorFileMap)) {
-        for (const QString &key : cursorFile.cursorMap.keys()) {
+        const QStringList keys = cursorFile.cursorMap.keys();
+        for (const QString &key : keys) {
             QList<Cursor> cursors = cursorFile.cursorMap.values(key);
 
             int digits = QSN(cursors.length() - 1).length();
