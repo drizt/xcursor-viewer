@@ -1,0 +1,14 @@
+{
+    "[cpp]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+        "editor.formatOnSave": true
+    },
+    "clang-tidy.executable": "./.vscode/clang-tidy-clazy",
+    "clang-tidy.buildPath": "build",
+    "clang-tidy.lintOnSave": true,
+    "clang-tidy.fixOnSave": false,
+    "clang-tidy.progressBarLocation": "Status Bar",
+    "cmake.configureSettings": {
+        "CMAKE_CXX_CLANG_TIDY": "clang-tidy;--load=/usr/lib64/ClazyClangTidy.so"
+    }
+}
